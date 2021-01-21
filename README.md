@@ -34,6 +34,12 @@ We extract the ROI of the handwriting bounding boxes (if any), and then pass the
 
 ## Task 3: Indicate the location of anomalies with bounding boxes
 
+As the train set only contains very few `double_stack` and `black_spot` anomalies, we generated more images for each category for labelling.
+
+- For `double_stack`, we simply sampled and cropped the normal chips from several images and overlaid them directly on another chip on Illustrator.
+- For `black_spot` anomaly, we cropped out them out and used ImageDataGenerator to augment data in different sizes, orientation, brightness, etc, and then used Illustrator to superimpose them on selected images.
+  - During the process, we also rotated the chip in 180 degrees as we knew that the black spot must be either at the top left hand corner or the bottom right hand corner.
+
 We extracted the ROI, coordinates and confidence scores of the anomalies bounding boxes (if any).
 
 # Installation
