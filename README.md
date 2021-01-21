@@ -40,7 +40,7 @@ As the train set only contains very few `double_stack` and `black_spot` anomalie
 - For `black_spot` anomaly, we cropped out them out and used ImageDataGenerator to augment data in different sizes, orientation, brightness, etc, and then used Illustrator to superimpose them on selected images.
   - During the process, we also rotated the chip in 180 degrees as we knew that the black spot must be either at the top left hand corner or the bottom right hand corner.
 
-We extracted the ROI, coordinates and confidence scores of the anomalies bounding boxes (if any).
+During inference, we extract the ROI, coordinates and confidence scores of the anomalies bounding boxes (if any).
 
 # Installation
 
@@ -64,8 +64,9 @@ Edit `train.ipynb` accordingly.
    python3 acumen_config.py train --dataset=/path/to/acumen/dataset --weights=/path/to/pretrained/weights --logs=/path/to/logs
    ```
 
-Once done, run all the cells to start the training process :) When model training is completed, the weights can be found in the timestamp folder of your specified log directory.
+Once done, run all the cells to start the training process :) Make sure to change Runtime type to GPU.
 
+When model training is completed, the weights can be found in the timestamp folder of your specified log directory.
 Tip: monitor the `val_loss` during training, and use the weights that gives the lowest loss for inference.
 
 # Infererence
