@@ -64,7 +64,7 @@ Edit `train.ipynb` accordingly.
    python3 acumen_config.py train --dataset=/path/to/acumen/dataset --weights=/path/to/pretrained/weights --logs=/path/to/logs
    ```
 
-Once done, run all the cells to start the training process :) Make sure to change Runtime type to GPU.
+Once done, run all the cells to start the training process. Make sure to change Runtime type to GPU.
 
 When model training is completed, the weights can be found in the timestamp folder of your specified log directory.
 Tip: monitor the `val_loss` during training, and use the weights that gives the lowest loss for inference.
@@ -82,6 +82,22 @@ Edit `inference.ipynb` accordingly.
    ACUMEN_WEIGHTS_PATH = ROOT_DIR + '/path/to/pretrained/weights'
    ```
 
-Once done, run all the cells to start the inference process :)
+Once done, run all the cells to start the inference process.
 
 The results can be found in `submissions.csv`.
+
+# Learning Points
+
+1. Many chips could not be detected during the inference phase, affecting the total count. Especially because there were too many normal chips, when the RPNs were generated too close to each other, the non-max suppression threshold algorithm could have accidentally discarded the neighboring chip.
+   - We could reduce the threshold value, or not label these majority chips at all (point 4).
+   - Another alternative is to perform post-processing with the help of cv2 methods to see if there is indeed a missing chip.
+2. Despite data augmentation, anomalies were not detected at all; some were mislabeled as normal. This could be because there were too few anomalies samples for the CNN to learn the features well.
+   - More anomaly samples need to be generated and labelled.
+3. The gradients exploded very quickly, resulting in nan loss. Lowering the learning rate did not help either. This problem appeared to happen when we started to feed in more data, but proper troubleshooting would require further exploration.
+4. The handwriting region was detected very well. Unfortunately, EasyOCR was not very good at diciphering the texts. Neither was PyTesseract. Mapping possible confusing letters to numerals were helpful to a limited extent.
+   - A more targeted neural network implementation (for digits only), or a combination of both EasyOCR and PyTesseract might improve the handwriting recognition.
+   - Another possibility is to segment the numerals and then feed each of them into a simple VGG network trained on the MNIST dataset.
+5. A better approach might be to label only the anomalies instead of every single chip for the Mask R-CNN model. This saves much manpower and time as well.
+   - If we go ahead with this proposal, we would need to use cv2 techniques for Task 1.
+   - Even though we experimented with several methods (e.g. thresholding, contrasting), the lighting conditions and varying resolutions of the given samples were too difficult for us to fine-tune the values properly. More advanced cv2 methods could be explored.
+6. Another suggestion to improve the Mask-RCNN model is to pre-process the images (e.g. perform histogram equalization) before feeding into the network.
