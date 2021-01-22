@@ -24,17 +24,25 @@ We used VGG Annotator 2.0 for labelling. The labels are encoded as follows:
 
 With the information from the bounding boxes, we count the number of normal (class_id = 1) + 2 \* double_stack (class_id = 2).
 
+We later realized that our model was unable to detect more than 100 bounding boxes, so we defaulted such values to 250 for the purpose of this task.
+
 ## Task 2: Identify the handwritten manual count present on each counting paper
 
 We extract the ROI of the handwriting bounding boxes (if any), and then pass the sliced image for detection using `easy-ocr` function.
+
+Initial plan:
 
 - If no handwriting region is detected, the count is -1.
 - If more than 1 handwriting region is detected, the bounding box with the highest confidence score will be used.
   - If the returned value cannot be recognized as valid numerals, we will use the count from Task 1 as the answer.
 
+Final plan:
+
+- Only large, well-written handwriting regions could be detected. As most handwritings were too small to be detected, we decided to just use the count from Task 1 as the answer.
+
 ## Task 3: Indicate the location of anomalies with bounding boxes
 
-As the train set only contains very few `double_stack` and `black_spot` anomalies, we generated more images for each category for labelling.
+As the train set only contains very few `double_stack` and `black_spot` anomalies, we generated more images for each category for labelling. You can find them in the `/datasets` folder.
 
 - For `double_stack`, we simply sampled and cropped the normal chips from several images and overlaid them directly on another chip on Illustrator.
 - For `black_spot` anomaly, we cropped out them out and used ImageDataGenerator to augment data in different sizes, orientation, brightness, etc, and then used Illustrator to superimpose them on selected images.
@@ -89,15 +97,17 @@ The results can be found in `submissions.csv`.
 # Learning Points
 
 1. Many chips could not be detected during the inference phase, affecting the total count. Especially because there were too many normal chips, when the RPNs were generated too close to each other, the non-max suppression threshold algorithm could have accidentally discarded the neighboring chip.
-   - We could reduce the threshold value, or not label these majority chips at all (point 4).
+   - We could reduce the threshold value, or not label these majority chips at all (point 5).
    - Another alternative is to perform post-processing with the help of cv2 methods to see if there is indeed a missing chip.
 2. Despite data augmentation, anomalies were not detected at all; some were mislabeled as normal. This could be because there were too few anomalies samples for the CNN to learn the features well.
    - More anomaly samples need to be generated and labelled.
 3. The gradients exploded very quickly, resulting in nan loss. Lowering the learning rate did not help either. This problem appeared to happen when we started to feed in more data, but proper troubleshooting would require further exploration.
-4. The handwriting region was detected very well. Unfortunately, EasyOCR was not very good at diciphering the texts. Neither was PyTesseract. Mapping possible confusing letters to numerals were helpful to a limited extent.
+4. The handwriting region was detected relatively well. Unfortunately, EasyOCR was not very good at diciphering the texts. Neither was PyTesseract. Mapping possible confusing letters to numerals was helpful to a limited extent.
    - A more targeted neural network implementation (for digits only), or a combination of both EasyOCR and PyTesseract might improve the handwriting recognition.
    - Another possibility is to segment the numerals and then feed each of them into a simple VGG network trained on the MNIST dataset.
 5. A better approach might be to label only the anomalies instead of every single chip for the Mask R-CNN model. This saves much manpower and time as well.
    - If we go ahead with this proposal, we would need to use cv2 techniques for Task 1.
    - Even though we experimented with several methods (e.g. thresholding, contrasting), the lighting conditions and varying resolutions of the given samples were too difficult for us to fine-tune the values properly. More advanced cv2 methods could be explored.
 6. Another suggestion to improve the Mask-RCNN model is to pre-process the images (e.g. perform histogram equalization) before feeding into the network.
+
+Refer to the `/code_snippets` folder which documents some of our learning process.
